@@ -7,15 +7,16 @@ p_load(tidyverse,viridis,sf,leaflet, rio, skimr,ggsn, broom, stargazer, modelsum
        margins,rockchalk, htmltools, rvest, ggmap)
 
 #PUNTO1-MAPAS#
+#1.1 Importo los datos
 
 via = st_read("data/input/VIAS.shp")
 
 puntos = st_read("data/input/MGN_URB_TOPONIMIA.shp")
 
-#1.1.2
+#1.1.2: creo el objeto c_medico como se describe en el taller
 c_medico = puntos %>% filter(CSIMBOL %in% c("021001", "021002", "021003"))
 
-#1.1.3
+#1.1.3: importolos datos y creo los objetos depto y mapmuse 
 c_poblado = import("data/input/c poblado (2017).rds") %>%  filter(cod_dane >= 54001, cod_dane < 55000)
 
 depto = import("data/input/dp deptos (2017).rds") %>% filter(name_dpto=="NORTE DE SANTANDER")
@@ -36,9 +37,8 @@ mapmusereg = readRDS("data/input/victimas_map-muse.rds")
 
 mapmusereg = mapmusereg %>% mutate(estado = ifelse(estado=='Muerto',1,0))
 
-ols = lm(estado ~ as.factor(tipo_accidente) + as.factor(year)  
-         + as.factor(month)+ as.factor(condicion)+ as.factor(genero)
-         + as.factor(actividad), data = mapmusereg) 
+ols = lm(estado ~ as.factor(tipo_accidente) + as.factor(year) + as.factor(month) + as.factor(condicion)
+         + as.factor(genero) + as.factor(actividad), data = mapmusereg) 
 
 ols %>% summary()
 
@@ -51,30 +51,18 @@ grafico22
 ggsave("views/coef_plot_ols.jpeg", grafico22)
 
 #2.3: estimo logit y probit
-logit = glm(estado ~ as.factor(tipo_accidente) 
-            + as.factor(year)  
-            + as.factor(month)
-            + as.factor(genero)
-            + as.factor(condicion)
-            + as.factor(actividad),              
-            data = mapmusereg, 
-            family = binomial(link="logit")) 
+logit = glm(estado ~ as.factor(tipo_accidente) + as.factor(year)+ as.factor(month)+ as.factor(genero)
+            + as.factor(condicion) + as.factor(actividad), data = mapmusereg, family = binomial(link="logit")) 
 
 
-probit = glm(estado ~ as.factor(tipo_accidente) 
-             + as.factor(year)  
-             + as.factor(month)
-             + as.factor(genero)
-             + as.factor(condicion)
-             + as.factor(actividad),              
-             data = mapmusereg, 
-             family = binomial(link="probit")) 
+probit = glm(estado ~ as.factor(tipo_accidente) + as.factor(year) + as.factor(month) + as.factor(genero) 
+             + as.factor(condicion) + as.factor(actividad), data = mapmusereg, family = binomial(link="probit")) 
 
 #2.4: imprimo los resultados de las 3 estimaciones en una tabla
 varbls = list('Logit' = logit , 'Probit' = probit , "OLS" = ols)
 tabla24 = outreg(varbls, type="html")
 
-#2.5:
+#2.5: calculo los marginales (se demora)
 logitmarginal = margins(logit)
 probitmarginal = margins(probit)
 
@@ -83,7 +71,7 @@ probitmarginal = margins(probit)
 
 #PUNTO 3-WEB-SCRAPING#
 
-#3.1:
+#3.1: creo el objeto 
 browseURL(url = 'https://es.wikipedia.org/wiki/Departamentos_de_Colombia',browser = getOption('browser'))
 
 wiki = "https://es.wikipedia.org/wiki/Departamentos_de_Colombia"
@@ -95,7 +83,7 @@ titulo = wiki %>% html_nodes(xpath = '//*[@id="firstHeading"]') %>% html_text()
 titulo
 
 #3.3: extraigo la informción de los departamentos en tabla
-departamentos = html_wiki %>% html_nodes('table') 
+departamentos = wiki %>% html_nodes('table') 
 departamentos
 
 departamentos[4] %>% html_table(header = T,fill=T)
