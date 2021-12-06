@@ -28,6 +28,7 @@ mapmuse = import("data/input/victimas_map-muse.rds")
 
 
 
+
 #PUNTO 2-REGRESIONES#
 
 #2.1:importo la base de datos, estimo el modelo ylo guardo en el objeto llamado ols
